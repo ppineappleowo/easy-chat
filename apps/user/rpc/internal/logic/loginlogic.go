@@ -2,12 +2,12 @@ package logic
 
 import (
 	"context"
-	"database/sql"
 	"easy-chat/apps/user/models"
 	"easy-chat/pkg/ctxdata"
 	"easy-chat/pkg/encrypt"
-	"easy-chat/pkg/wuid"
+	"easy-chat/pkg/xerr"
 	"github.com/pkg/errors"
+
 	"time"
 
 	"easy-chat/apps/user/rpc/internal/svc"
@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	ErrPhoneNotRegister = errors.New("手机号没有注册过")
-	ErrUserPwdError     = errors.New("密码错误")
+	ErrPhoneNotRegister = xerr.New(xerr.SERVER_COMMON_ERROR, "手机号没有注册过")
+	ErrUserPwdError     = xerr.New(xerr.SERVER_COMMON_ERROR, "密码错误")
 )
 
 type LoginLogic struct {
@@ -44,7 +44,7 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 		if err != models.ErrNotFound {
 			return nil, errors.WithStack(ErrPhoneNotRegister)
 		}
-		return nil, err
+		return nil, errors.Wrapf(xerr.NewDBErr(), "find user by phone %v,req %v", err)
 	}
 
 	// 密码验证
@@ -57,7 +57,7 @@ func (l *LoginLogic) Login(in *user.LoginReq) (*user.LoginResp, error) {
 	token, err := ctxdata.GetJwtToken(l.svcCtx.Config.Jwt.AccessSecret, now, l.svcCtx.Config.Jwt.AccessExpire,
 		userEntity.Id)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(xerr.NewDBErr(), "ctxdata get jwt token err %v", err)
 	}
 
 	return &user.LoginResp{
