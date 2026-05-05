@@ -3,7 +3,7 @@ need_start_server_shell=(
   user-rpc-test.sh
 
   #api
-
+  user-api-test.sh
 
 )
 

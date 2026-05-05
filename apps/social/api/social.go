@@ -17,7 +17,7 @@ import (
 	"github.com/zeromicro/go-zero/rest"
 )
 
-var configFile = flag.String("f", "etc/social.yaml", "the config file")
+var configFile = flag.String("f", "etc/dev/social.yaml", "the config file")
 
 func main() {
 	flag.Parse()
@@ -33,7 +33,7 @@ func main() {
 
 	httpx.SetErrorHandlerCtx(resultx.ErrHandler(c.Name))
 	httpx.SetOkHandler(resultx.OkHandler)
-	
+
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	server.Start()
 }
