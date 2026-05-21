@@ -4,10 +4,10 @@ import (
 	"easy-chat/apps/user/models"
 	"easy-chat/apps/user/rpc/internal/config"
 	"easy-chat/pkg/constants"
+	"easy-chat/pkg/ctxdata"
 	"github.com/zeromicro/go-zero/core/stores/redis"
-	"time"
-
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
+	"time"
 )
 
 type ServiceContext struct {
@@ -28,9 +28,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 func (svc *ServiceContext) SetRootToken() error {
 	//生成jwt
-	systemToken, err := cxtdata.GetJwtToken(svc.Config.Jwt.AccessSecret, time.Now(), Unix(), constants.SYSTEM_ROOT_UID)
+	systemToken, err := ctxdata.GetJwtToken(svc.Config.Jwt.AccessSecret, time.Now(), Unix(), constants.SYSTEM_ROOT_UID)
 	if err != nil {
 		return err
 	}
 	//写入redis
+	return svc.Redis.Set(constants.REDIS_SYSTEM_ROOT_TOKEN, systemToken)
 }

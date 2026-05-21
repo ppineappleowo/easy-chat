@@ -5,10 +5,10 @@ import (
 	"flag"
 	"fmt"
 
-	"easy-chat/apps/user/rpc/internal/config"
-	"easy-chat/apps/user/rpc/internal/server"
-	"easy-chat/apps/user/rpc/internal/svc"
-	"easy-chat/apps/user/rpc/user"
+	"easy-chat/apps/im/rpc/im"
+	"easy-chat/apps/im/rpc/internal/config"
+	"easy-chat/apps/im/rpc/internal/server"
+	"easy-chat/apps/im/rpc/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var configFile = flag.String("f", "etc/dev/user.yaml", "the config file")
+var configFile = flag.String("f", "etc/im.yaml", "the config file")
 
 func main() {
 	flag.Parse()
@@ -26,12 +26,8 @@ func main() {
 	conf.MustLoad(*configFile, &c)
 	ctx := svc.NewServiceContext(c)
 
-	if err := ctx.SetRootToken(); err != nil {
-		panic(err)
-	}
-
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		user.RegisterUserServer(grpcServer, server.NewUserServer(ctx))
+		im.RegisterImServer(grpcServer, server.NewImServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)
@@ -39,6 +35,7 @@ func main() {
 	})
 
 	s.AddUnaryInterceptors(rpcserver.LogInterceptor)
+
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)

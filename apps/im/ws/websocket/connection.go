@@ -18,13 +18,13 @@ type Conn struct {
 	idle              time.Time
 	maxConnectionIdle time.Duration
 
-	//messageMu sync.Mutex
-	//// 读消息队列
-	//readMessage []*Message
-	//// 记录消息序列化(key：消息id value：具体消息)
-	//readMessageSeq map[string]*Message
-	//// 该通道用于ACK确认之后将消息发送给任务处理(handlerWrite)
-	//message chan *Message
+	messageMu sync.Mutex
+	// 读消息队列
+	readMessage []*Message
+	// 记录消息序列化(key：消息id value：具体消息)
+	readMessageSeq map[string]*Message
+	// 该通道用于ACK确认之后将消息发送给任务处理(handlerWrite)
+	message chan *Message
 
 	done chan struct{}
 }
@@ -41,10 +41,10 @@ func NewConn(s *Server, w http.ResponseWriter, r *http.Request) *Conn {
 		s:                 s,
 		idle:              time.Now(),
 		maxConnectionIdle: s.opt.maxConnectionIdle,
-		//readMessage:       make([]*Message, 0, 2),
-		//readMessageSeq:    make(map[string]*Message, 2),
-		////✨通道大小设置为1：可以减少数据投递中的阻塞情况，也可以保障这个收和发的执行的顺序问题
-		//message: make(chan *Message, 1),
+		readMessage:       make([]*Message, 0, 2),
+		readMessageSeq:    make(map[string]*Message, 2),
+		//✨通道大小设置为1：可以减少数据投递中的阻塞情况，也可以保障这个收和发的执行的顺序问题
+		message: make(chan *Message, 1),
 		done:    make(chan struct{}),
 	}
 
@@ -64,10 +64,10 @@ func (c *Conn) appendMsgMq(msg *Message) {
 			return
 		}
 
-		// ACK的确认是对当前序号进行+1处理
+		//ACK的确认是对当前序号进行+1处理
 		//✨如果传入的msg序号 <= 队列中存在的消息序号，则说明未进行ACK确认
-		//if msg.AckSeq <= m.AckSeq {
-			// 没有进行ack的确认, 也可能为重复发送
+		if msg.AckSeq <= m.AckSeq {
+			//没有进行ack的确认, 也可能为重复发送
 			return
 		}
 

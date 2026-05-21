@@ -2,9 +2,8 @@ package immodels
 
 import (
 	"easy-chat/pkg/constants"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type ChatLog struct {
